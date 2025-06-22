@@ -13,7 +13,15 @@ It includes:
 * 📁 Organized structure for training, deployment, and experimentation
 
 ---
+## 🚀 Demo
 
+This app is deployed via **Streamlit Cloud**.
+
+🔗 **Live Demo**: [DME Detection Streamlit App](https://dmeproject0.streamlit.app/)
+
+
+
+---
 ## 📁 Project Structure
 
 ```
@@ -129,14 +137,6 @@ These are saved in `/reports`.
 
 ---
 
-## 🚀 Demo
-
-This app is deployed via **Streamlit Cloud**.
-
-Try the live web app here 👉 [DME Detection Streamlit Demo](https://dmeproject0.streamlit.app/)
-📦 App file: `streamlit_app.py`  
-📁 Models auto-loaded from `models/`  
-📊 Evaluation results read from `reports/`
 
 
 ## 👤 Author
