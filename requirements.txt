@@ -1,11 +1,9 @@
 tensorflow==2.15.0
-numpy
 opencv-python
+numpy
 matplotlib
-flask
+pandas
 scikit-learn
-tqdm
-Pillow
-plotly
 seaborn
+pillow
 streamlit
