@@ -1,9 +1,8 @@
-tensorflow
-opencv-python
-numpy
-matplotlib
-pandas
-scikit-learn
-seaborn
-pillow
 streamlit
+tensorflow==2.13.0
+pandas
+matplotlib
+seaborn
+opencv-python
+scikit-learn
+pillow
