@@ -11,45 +11,56 @@ It includes:
 * 📊 Classification report + confusion matrix
 * 🖼️ Image-based prediction with Streamlit UI
 * 📁 Organized structure for training, deployment, and experimentation
+* 🧪 Evaluation visualizations and pretrained models
 
 ---
-## 🚀 Demo
 
-This app is deployed via **Streamlit Cloud**.
-
-🔗 **Live Demo**: [DME Detection Streamlit App](https://dmeproject0.streamlit.app/)
-
-
-
----
 ## 📁 Project Structure
 
 ```
 DME_Detection_Project/
-├── models/                 # Saved model weights (.h5)
+├── app/
+│   └── streamlit_app.py            # Streamlit UI dashboard
+│
+├── models/                         # Saved model weights (.h5)
 │   ├── dme_model.h5
 │   ├── dme_model_deep.h5
 │   └── dme_model_mobilenet.h5
 │
-├── reports/               # Visual outputs
+├── reports/                        # Output plots + confusion matrices
 │   ├── accuracy_plot.png
+│   ├── confusion_matrix.png
 │   ├── accuracy_plot_deep.png
+│   ├── confusion_matrix_deep.png
 │   ├── accuracy_plot_mobilenet.png
-│   └── confusion_matrix.png
+│   └── confusion_matrix_mobilenet.png
 │
-├── train/                 # Image dataset (flat + labels.csv)
+├── sample_images/                  # Sample retina images for demo
 │
-├── labels.csv             # CSV file mapping filename to label
+├── train/                          # Image dataset (flat folder)
+├── labels.csv                      # Maps filenames to labels
 │
-├── cnn.py                 # Baseline CNN
-├── cnn_deep.py            # Deep CNN
-├── cnn_mobilenet.py       # MobileNetV2 transfer learning
-│
-├── utils.py               # Image preprocessing & model helpers
-├── streamlit_app.py       # Streamlit dashboard
-├── requirements.txt       # All dependencies
-└── README.md              # 📄 This file
+├── cnn.py                          # Baseline CNN training
+├── cnn_deep.py                     # Deeper CNN architecture
+├── cnn_mobilenet.py                # Transfer learning (MobileNetV2)
+├── utils.py                        # Image pre-processing & helpers
+├── requirements.txt                # Python dependencies
+├── packages.txt                    # Linux dependencies (e.g., libgl1)
+├── runtime.txt                     # Python version for Streamlit Cloud
+└── README.md                       # 📄 This file
 ```
+
+---
+
+## 🚀 Demo
+
+This app is deployed via **Streamlit Cloud**.
+
+Try the live web app here 👉 [DME Detection Streamlit Demo](https://dmeproject0.streamlit.app/)
+
+📦 App file: `app/streamlit_app.py`  
+📁 Models auto-loaded from `models/`  
+📊 Evaluation results read from `reports/`
 
 ---
 
@@ -58,8 +69,8 @@ DME_Detection_Project/
 1. **Clone the repo**
 
 ```bash
-git clone <your-repo-url>
-cd DME_Detection_Project
+git clone https://github.com/VachanaVisweswaraiah/DME_Project.git
+cd DME_Project
 ```
 
 2. **Create a virtual environment**
@@ -75,7 +86,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-4. **Train models** (Optional if .h5 files are available)
+4. **Train models (optional)**
 
 ```bash
 python cnn.py
@@ -86,34 +97,38 @@ python cnn_mobilenet.py
 5. **Launch Streamlit app**
 
 ```bash
-streamlit run streamlit_app.py
+streamlit run app/streamlit_app.py
 ```
 
 ---
 
-## 🧠 Models
+## 💻 Streamlit Dashboard (`streamlit_app.py`)
 
-### cnn.py
+Tabs:
 
-* Simple CNN with 3 conv layers
+- **Project Info** – Overview & descriptions of all 3 models
+- **Predict DR Stage** – Upload a retina image or select a sample to run predictions
+- **Model Evaluation** – Visual display of confusion matrices and accuracy plots
 
-### cnn\_deep.py
+---
 
-* 4 conv layers with 256 units + dropout + batch norm
+## 🧠 Training Scripts
 
-### cnn\_mobilenet.py
-
-* Fine-tuned MobileNetV2 using transfer learning
+| Script            | Description                                    | Output files generated                          |
+|-------------------|------------------------------------------------|-------------------------------------------------|
+| `cnn.py`          | Baseline CNN with 3 conv layers               | `dme_model.h5`, accuracy/confusion plots        |
+| `cnn_deep.py`     | Deeper CNN with batch norm + dropout         | `dme_model_deep.h5`, deep evaluation plots      |
+| `cnn_mobilenet.py`| Transfer learning using MobileNetV2          | `dme_model_mobilenet.h5`, mobilenet eval plots  |
 
 ---
 
 ## 📈 Evaluation Metrics
 
-* Accuracy
-* Classification Report
-* Confusion Matrix
+Saved in `reports/` folder:
 
-These are saved in `/reports`.
+- Accuracy plots
+- Confusion matrices
+- Classification reports
 
 ---
 
@@ -125,20 +140,33 @@ These are saved in `/reports`.
 
 ---
 
-## 📦 Requirements (partial)
+## 📦 Dependencies
 
-* streamlit
-* tensorflow
-* scikit-learn
-* pandas
-* opencv-python
-* matplotlib
-* seaborn
+From `requirements.txt`:
+
+- streamlit
+- tensorflow==2.13.0
+- scikit-learn
+- pandas
+- opencv-python
+- matplotlib
+- seaborn
+
+From `packages.txt` (for Streamlit Cloud):
+
+```
+libgl1-mesa-glx
+```
 
 ---
 
-
-
 ## 👤 Author
 
-* Built by Vachana Visweswaraiah as part of a DME classification project using deep learning and Streamlit.
+Built by [Vachana Visweswaraiah](https://github.com/VachanaVisweswaraiah) as part of a deep learning project on diabetic macular edema detection.
+
+---
+
+## 📌 Notes
+
+- Ensure `runtime.txt` is set to `python-3.10` for compatibility on Streamlit Cloud
+- Deployment may take a few minutes during the first launch
