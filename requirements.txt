@@ -1,0 +1,12 @@
+tensorflow-macos==2.15.0
+tensorflow-metal==1.1.0
+numpy
+opencv-python
+matplotlib
+flask
+scikit-learn
+tqdm
+Pillow
+plotly
+seaborn
+streamlit
