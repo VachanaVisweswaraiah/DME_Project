@@ -133,7 +133,7 @@ These are saved in `/reports`.
 
 This app is deployed via **Streamlit Cloud**.
 
-Try the live web app here 👉 **[DME Detection Streamlit Demo](https://dmeproject0.streamlit.app/)**    
+Try the live web app here 👉 [DME Detection Streamlit Demo](https://dmeproject0.streamlit.app/)
 📦 App file: `streamlit_app.py`  
 📁 Models auto-loaded from `models/`  
 📊 Evaluation results read from `reports/`
