@@ -24,11 +24,9 @@ SAMPLE_IMAGES = {
     "Proliferate": "sample_images/sample_proliferate.png"
 }
 
-
 @st.cache_resource
 def load_models():
     return {name: load_model(path) for name, path in MODEL_PATHS.items()}
-
 
 models = load_models()
 
@@ -38,7 +36,6 @@ selected_tab = st.sidebar.radio(
     "Navigation",
     ["📖 Project Info", "🧠 Predict DR Stage", "📊 Model Evaluation"]
 )
-
 
 # ------------------- INFO PAGE -------------------
 if selected_tab == "📖 Project Info":
@@ -63,37 +60,7 @@ if selected_tab == "📖 Project Info":
 # ------------------- PREDICTION PAGE -------------------
 elif selected_tab == "🧠 Predict DR Stage":
     st.title("🧠 Diabetic Retinopathy Detection")
-
-elif selected_tab == "📊 Model Evaluation":
-    st.title("📊 Model Evaluation")
-
-    st.markdown("""
-    Here's how each model performed on the validation dataset.
-    
-    - Metrics shown: **Accuracy**, **Confusion Matrix**
-    - Data Source: Validation set (20% of training data)
-    """)
-
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        st.subheader("CNN")
-        st.image("reports/accuracy_plot.png", caption="Accuracy - CNN", use_column_width=True)
-        st.image("reports/confusion_matrix.png", caption="Confusion Matrix - CNN", use_column_width=True)
-
-    with col2:
-        st.subheader("Deep CNN")
-        st.image("reports/accuracy_plot_deep.png", caption="Accuracy - Deep CNN", use_column_width=True)
-        st.image("reports/confusion_matrix_deep.png", caption="Confusion Matrix - Deep CNN", use_column_width=True)
-
-    with col3:
-        st.subheader("MobileNetV2")
-        st.image("reports/accuracy_plot_mobilenet.png", caption="Accuracy - MobileNetV2", use_column_width=True)
-        st.image("reports/confusion_matrix_mobilenet.png", caption="Confusion Matrix - MobileNetV2", use_column_width=True)
-
-    st.markdown("---")
-    st.markdown("Note: Even advanced models like MobileNetV2 may misclassify borderline cases.\nIt's helpful to explore confusion matrices to see patterns in mistakes.")
-
+    st.markdown("Upload a retina image or try a sample to compare predictions from all models.")
 
     # ---------- 1. Uploaded Image ----------
     st.subheader("📤 Upload Retina Image")
@@ -103,7 +70,6 @@ elif selected_tab == "📊 Model Evaluation":
         image = Image.open(uploaded_file).convert('RGB')
         st.image(image, caption="Uploaded Retina Image", width=300)
 
-        # Preprocess
         img_array = np.array(image)
         img_array = cv2.resize(img_array, (IMG_SIZE, IMG_SIZE)) / 255.0
         img_array = np.expand_dims(img_array, axis=0)
@@ -130,7 +96,6 @@ elif selected_tab == "📊 Model Evaluation":
         image = Image.open(path).convert('RGB')
         st.image(image, caption=f"Sample Image: {selected_sample}", width=300)
 
-        # Preprocess
         img_array = np.array(image)
         img_array = cv2.resize(img_array, (IMG_SIZE, IMG_SIZE)) / 255.0
         img_array = np.expand_dims(img_array, axis=0)
@@ -145,3 +110,33 @@ elif selected_tab == "📊 Model Evaluation":
                 st.success(f"**Prediction:** {label} ({conf:.2f}%)")
                 st.subheader("Class Probabilities")
                 st.bar_chart({CLASS_NAMES[i]: float(pred[i]) for i in range(len(CLASS_NAMES))})
+
+# ------------------- EVALUATION PAGE -------------------
+elif selected_tab == "📊 Model Evaluation":
+    st.title("📊 Model Evaluation")
+    st.markdown("""
+    Here's how each model performed on the validation dataset.
+    
+    - Metrics shown: **Accuracy**, **Confusion Matrix**
+    - Data Source: Validation set (20% of training data)
+    """)
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.subheader("CNN")
+        st.image("reports/accuracy_plot.png", caption="Accuracy - CNN", use_container_width=True)
+        st.image("reports/confusion_matrix.png", caption="Confusion Matrix - CNN", use_container_width=True)
+
+    with col2:
+        st.subheader("Deep CNN")
+        st.image("reports/accuracy_plot_deep.png", caption="Accuracy - Deep CNN", use_container_width=True)
+        st.image("reports/confusion_matrix_deep.png", caption="Confusion Matrix - Deep CNN", use_container_width=True)
+
+    with col3:
+        st.subheader("MobileNetV2")
+        st.image("reports/accuracy_plot_mobilenet.png", caption="Accuracy - MobileNetV2", use_container_width=True)
+        st.image("reports/confusion_matrix_mobilenet.png", caption="Confusion Matrix - MobileNetV2", use_container_width=True)
+
+    st.markdown("---")
+    st.markdown("Note: Even advanced models like MobileNetV2 may misclassify borderline cases.\nIt's helpful to explore confusion matrices to see patterns in mistakes.")

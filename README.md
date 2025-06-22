@@ -129,6 +129,16 @@ These are saved in `/reports`.
 
 ---
 
+## 🚀 Demo
+
+This app is deployed via **Streamlit Cloud**.
+
+Try the live web app here 👉 **[DME Detection Streamlit Demo](https://your-deployment-link.streamlit.app)**    
+📦 App file: `streamlit_app.py`  
+📁 Models auto-loaded from `models/`  
+📊 Evaluation results read from `reports/`
+
+
 ## 👤 Author
 
 * Built by Vachana Visweswaraiah as part of a DME classification project using deep learning and Streamlit.

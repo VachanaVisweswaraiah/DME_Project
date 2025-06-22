@@ -1,146 +1,151 @@
-import streamlit as st
+import os
+import pandas as pd
 import numpy as np
-import cv2
-from tensorflow.keras.models import load_model
-from PIL import Image
+import matplotlib.pyplot as plt
+import seaborn as sns
 
-# ------------------- CONFIG -------------------
-st.set_page_config(page_title="Diabetic Retinopathy Detector", layout="wide")
+from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.model_selection import train_test_split
+from sklearn.utils.class_weight import compute_class_weight
 
-MODEL_PATHS = {
-    "CNN": "models/dme_model.h5",
-    "Deep CNN": "models/dme_model_deep.h5",
-    "MobileNetV2": "models/dme_model_mobilenet.h5"
-}
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, BatchNormalization
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
+from tensorflow.keras.optimizers.legacy import Adam
 
-IMG_SIZE = 150
-CLASS_NAMES = ['Mild', 'Moderate', 'Normal', 'Proliferate', 'Severe']
+# Load dataset
+df = pd.read_csv("labels.csv")
 
-SAMPLE_IMAGES = {
-    "Normal": "sample_images/sample_normal.png",
-    "Mild": "sample_images/sample_mild.png",
-    "Moderate": "sample_images/sample_moderate.png",
-    "Severe": "sample_images/sample_severe.png",
-    "Proliferate": "sample_images/sample_proliferate.png"
-}
+# Split data
+train_df, val_df = train_test_split(df, test_size=0.2, stratify=df["label"], random_state=42)
 
+# Image preprocessing
+img_size = 150
+batch_size = 32
+seed = 42
 
-@st.cache_resource
-def load_models():
-    return {name: load_model(path) for name, path in MODEL_PATHS.items()}
+train_gen = ImageDataGenerator(
+    rescale=1./255,
+    rotation_range=15,
+    zoom_range=0.1,
+    horizontal_flip=True
+)
+val_gen = ImageDataGenerator(rescale=1./255)
 
-
-models = load_models()
-
-# ------------------- SIDEBAR -------------------
-st.sidebar.title("DME Analyzer")
-selected_tab = st.sidebar.radio(
-    "Navigation",
-    ["📖 Project Info", "🧠 Predict DR Stage", "📊 Model Evaluation"]
+train_generator = train_gen.flow_from_dataframe(
+    train_df,
+    directory="train",
+    x_col="filename",
+    y_col="label",
+    target_size=(img_size, img_size),
+    batch_size=batch_size,
+    class_mode="categorical",
+    seed=seed
+)
+val_generator = val_gen.flow_from_dataframe(
+    val_df,
+    directory="train",
+    x_col="filename",
+    y_col="label",
+    target_size=(img_size, img_size),
+    batch_size=batch_size,
+    class_mode="categorical",
+    seed=seed
 )
 
+# Class weights
+class_weights = compute_class_weight(
+    class_weight='balanced',
+    classes=np.unique(df['label']),
+    y=df['label']
+)
+label_to_index = train_generator.class_indices
+class_weight_dict = {
+    label_to_index[label]: weight
+    for label, weight in zip(np.unique(df['label']), class_weights)
+}
+num_classes = len(label_to_index)
 
-# ------------------- INFO PAGE -------------------
-if selected_tab == "📖 Project Info":
-    st.title("📘 Project Overview: Diabetic Retinopathy Detection")
-    st.markdown("""
-    This application helps detect **Diabetic Retinopathy (DR)** from retina images using three deep learning models:
-
-    - **CNN** – Simple convolutional model.
-    - **Deep CNN** – Deeper CNN with more layers.
-    - **MobileNetV2** – Lightweight, fine-tuned MobileNetV2 model.
-
-    ### DR Classification Stages:
-    - **Normal**: No signs of DR.
-    - **Mild**: Small microaneurysms.
-    - **Moderate**: More noticeable changes, including blood vessels.
-    - **Severe**: Extensive changes and blocked blood vessels.
-    - **Proliferate**: Growth of new abnormal blood vessels.
-
-    Upload or select a sample image to view predictions from all models.
-    """)
-
-# ------------------- PREDICTION PAGE -------------------
-elif selected_tab == "🧠 Predict DR Stage":
-    st.title("🧠 Diabetic Retinopathy Detection")
-    st.markdown("Upload a retina image or try a sample to compare predictions from all models.")
-
-    # ---------- 1. Uploaded Image ----------
-    st.subheader("📤 Upload Retina Image")
-    uploaded_file = st.file_uploader("Upload Retina Image", type=["jpg", "jpeg", "png"])
-
-    if uploaded_file is not None:
-        image = Image.open(uploaded_file).convert('RGB')
-        st.image(image, caption="Uploaded Retina Image", width=300)
-
-        # Preprocess
-        img_array = np.array(image)
-        img_array = cv2.resize(img_array, (IMG_SIZE, IMG_SIZE)) / 255.0
-        img_array = np.expand_dims(img_array, axis=0)
-
-        tabs = st.tabs(["CNN", "Deep CNN", "MobileNetV2"])
-        for tab, (model_name, model) in zip(tabs, models.items()):
-            with tab:
-                st.header(f"{model_name}")
-                pred = model.predict(img_array)[0]
-                label = CLASS_NAMES[np.argmax(pred)]
-                conf = pred[np.argmax(pred)] * 100
-                st.success(f"**Prediction:** {label} ({conf:.2f}%)")
-                st.subheader("Class Probabilities")
-                st.bar_chart({CLASS_NAMES[i]: float(pred[i]) for i in range(len(CLASS_NAMES))})
-
-    # ---------- 2. Sample Dropdown Image ----------
-    with st.expander("📁 Try with a Sample Image Instead"):
-        selected_sample = st.selectbox("Choose a sample retina image", list(SAMPLE_IMAGES.keys()))
-
-        if selected_sample:
-            path = SAMPLE_IMAGES[selected_sample]
-            image = Image.open(path).convert('RGB')
-            st.image(image, caption=f"Sample Image: {selected_sample}", width=300)
-
-            # Preprocess
-            img_array = np.array(image)
-            img_array = cv2.resize(img_array, (IMG_SIZE, IMG_SIZE)) / 255.0
-            img_array = np.expand_dims(img_array, axis=0)
-
-            tabs = st.tabs(["CNN (Sample)", "Deep CNN (Sample)", "MobileNetV2 (Sample)"])
-            for tab, (model_name, model) in zip(tabs, models.items()):
-                with tab:
-                    st.header(f"{model_name}")
-                    pred = model.predict(img_array)[0]
-                    label = CLASS_NAMES[np.argmax(pred)]
-                    conf = pred[np.argmax(pred)] * 100
-                    st.success(f"**Prediction:** {label} ({conf:.2f}%)")
-                    st.subheader("Class Probabilities")
-                    st.bar_chart({CLASS_NAMES[i]: float(pred[i]) for i in range(len(CLASS_NAMES))})
-
-
-# ------------------- EVALUATION PAGE -------------------
-elif selected_tab == "📊 Model Evaluation":
-    st.title("📊 Model Evaluation")
-    st.markdown("""
-    Here's how each model performed on the validation dataset.
+# Deep CNN model
+model = Sequential([
+    Conv2D(32, (3, 3), activation='relu', input_shape=(img_size, img_size, 3)),
+    BatchNormalization(),
+    Conv2D(32, (3, 3), activation='relu'),
+    MaxPooling2D(),
     
-    - Metrics shown: **Accuracy**, **Confusion Matrix**
-    - Data Source: Validation set (20% of training data)
-    """)
+    Conv2D(64, (3, 3), activation='relu'),
+    BatchNormalization(),
+    Conv2D(64, (3, 3), activation='relu'),
+    MaxPooling2D(),
+    
+    Conv2D(128, (3, 3), activation='relu'),
+    BatchNormalization(),
+    Conv2D(128, (3, 3), activation='relu'),
+    MaxPooling2D(),
 
-    col1, col2, col3 = st.columns(3)
+    Flatten(),
+    Dense(256, activation='relu'),
+    Dropout(0.5),
+    Dense(num_classes, activation='softmax')
+])
 
-    with col1:
-        st.subheader("CNN")
-        st.image("reports/accuracy_plot.png", caption="Accuracy - CNN", use_column_width=True)
-        st.image("reports/confusion_matrix.png", caption="Confusion Matrix - CNN", use_column_width=True)
+model.compile(
+    optimizer=Adam(learning_rate=1e-4),
+    loss='categorical_crossentropy',
+    metrics=['accuracy']
+)
 
-    with col2:
-        st.subheader("Deep CNN")
-        st.image("reports/accuracy_plot_deep.png", caption="Accuracy - Deep CNN", use_column_width=True)
-        st.image("reports/confusion_matrix_deep.png", caption="Confusion Matrix - Deep CNN", use_column_width=True)
+# Callbacks
+callbacks = [
+    EarlyStopping(patience=6, monitor='val_loss', restore_best_weights=True),
+    ModelCheckpoint("models/dme_model_deep.h5", save_best_only=True),
+    ReduceLROnPlateau(monitor='val_loss', patience=3, factor=0.5, verbose=1)
+]
 
-    with col3:
-        st.subheader("MobileNetV2")
-        st.image("reports/accuracy_plot_mobilenet.png", caption="Accuracy - MobileNetV2", use_column_width=True)
-        st.image("reports/confusion_matrix_mobilenet.png", caption="Confusion Matrix - MobileNetV2", use_column_width=True)
+# Train
+history = model.fit(
+    train_generator,
+    validation_data=val_generator,
+    epochs=40,
+    class_weight=class_weight_dict,
+    callbacks=callbacks
+)
 
-    st.markdown("---")
-    st.markdown("Even advanced models like MobileNetV2 may misclassify borderline cases.\nExplore confusion matrices to see patterns in errors.")
+# Create reports folder if not present
+os.makedirs("reports", exist_ok=True)
+
+# Save Accuracy Plot
+plt.plot(history.history['accuracy'], label='Train Accuracy')
+plt.plot(history.history['val_accuracy'], label='Val Accuracy')
+plt.title('Deep CNN Accuracy')
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy')
+plt.legend()
+plt.tight_layout()
+plt.savefig("reports/accuracy_plot_deep.png")
+# plt.show()
+
+# Classification Report & Confusion Matrix
+val_generator.reset()
+preds = model.predict(val_generator)
+y_pred = np.argmax(preds, axis=1)
+y_true = val_generator.classes
+class_labels = list(val_generator.class_indices.keys())
+
+print("📊 Classification Report:\n")
+print(classification_report(y_true, y_pred, target_names=class_labels))
+
+# Save Confusion Matrix
+cm = confusion_matrix(y_true, y_pred)
+plt.figure(figsize=(8, 6))
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
+            xticklabels=class_labels, yticklabels=class_labels)
+plt.title('Confusion Matrix - Deep CNN')
+plt.xlabel('Predicted')
+plt.ylabel('True')
+plt.tight_layout()
+plt.savefig("reports/confusion_matrix_deep.png")
+# plt.show()
+
+print("✅ Model and evaluation plots saved.")
