@@ -1,4 +1,4 @@
-# Diabetic Macular Edema Detection (Streamlit + CNNs)
+# Diabetic Macular Edema Detection
 
 This project builds a web-based diagnostic tool to detect **Diabetic Macular Edema (DME)** from retinal images using deep learning. Three models are compared:
 
